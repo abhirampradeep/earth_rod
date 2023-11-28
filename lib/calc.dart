@@ -60,6 +60,8 @@ class _CalculatorState extends State<Calculator> {
         return;
       }
     }
+
+    
   }
 
   @override
@@ -388,23 +390,27 @@ class _CalculatorState extends State<Calculator> {
                                                     _autovalidateMode =
                                                         AutovalidateMode.always;
                                                   });
+
+                                                  // Convert input to a valid format (e.g., add "0." to ".023")
+                                                  // Format all input fields
+                                                  _resistivity.text =
+                                                      formatInput(
+                                                          _resistivity.text);
+                                                  _rodelength.text =
+                                                      formatInput(
+                                                          _rodelength.text);
+                                                  _areaoflength.text =
+                                                      formatInput(
+                                                          _areaoflength.text);
+
                                                   if (_formKey.currentState!
                                                       .validate()) {
-                                                    if (_resistivity.text ==
-                                                            '0' &&
-                                                        _rodelength.text ==
-                                                            '0' &&
-                                                        _areaoflength.text ==
-                                                            '0') {
-                                                      setState(() {
-                                                        result = '';
-                                                      });
-                                                    } else {
-                                                      calculateResistance();
-                                                    }
+                                                    calculateResistance();
                                                   }
                                                 }
-                                              : null, // Disable the button if any of the required fields is empty
+                                              : null,
+
+                                          // Disable the button if any of the required fields is empty
                                           style: ElevatedButton.styleFrom(
                                             foregroundColor: Colors.green,
                                             backgroundColor: Colors.white,
@@ -452,9 +458,14 @@ class _CalculatorState extends State<Calculator> {
                                         contentPadding: EdgeInsets.all(10),
                                       ),
                                       controller: TextEditingController(
-                                          text: result.isEmpty
-                                              ? result
-                                              : '$result Ω'), // Append 'm' only when result is not empty
+                                        text: (_resistivity.text.isNotEmpty &&
+                                                _rodelength.text.isNotEmpty &&
+                                                _areaoflength.text.isNotEmpty)
+                                            ? (result.isEmpty
+                                                ? ''
+                                                : '$result Ω')
+                                            : '',
+                                      ),
                                     )
                                   ],
                                 ),
@@ -475,18 +486,27 @@ class _CalculatorState extends State<Calculator> {
   }
 
   void calculateResistance() {
-    double resistivity = double.parse(_resistivity.text);
-    double length = double.parse(_rodelength.text);
-    double diameter = double.parse(_areaoflength.text);
+    setState(() {
+      result =
+          ''; // Set result to empty string before performing the calculation
+    });
+    double resistivity = double.tryParse(_resistivity.text) ?? 0;
+    double length = double.tryParse(_rodelength.text) ?? 0;
+    double diameter = double.tryParse(_areaoflength.text) ?? 0;
+
+    if (resistivity == 0 || length == 0 || diameter == 0) {
+      setState(() {
+        result =
+            ''; // Set result to empty string if any of the input fields is empty
+      });
+      return;
+    }
 
     double result1 = (resistivity / (2 * pi * length));
-
-    print(result1);
 
     double result2 = log((8 * length) / diameter);
 
     double result3 = result2 - 1;
-    print(result3);
 
     double resistance = result1 * result3;
     // double result1 =
@@ -495,6 +515,13 @@ class _CalculatorState extends State<Calculator> {
       _userEnteredData = false;
       result = resistance.toStringAsFixed(3);
     });
+  }
+
+  String formatInput(String input) {
+    if (input.startsWith('.') && !input.startsWith('0.')) {
+      return '0$input';
+    }
+    return input;
   }
 
   // bool isValidDecimal(String value) {
