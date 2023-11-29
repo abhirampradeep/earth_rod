@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, curly_braces_in_flow_control_structures
-
 import 'dart:async';
 import 'dart:math';
 
@@ -14,7 +12,7 @@ class Calculator extends StatefulWidget {
 }
 
 class _CalculatorState extends State<Calculator> {
-  final _formkey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final style =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black);
@@ -25,17 +23,50 @@ class _CalculatorState extends State<Calculator> {
 
   String result = "";
 
-  bool _isObscure = true;
-
-  String _errorMessage = '';
-
   bool Loading = false;
 
-  bool _formSubmitted = false; // Track whether the form has been submitted
+  // Track whether the form has been submitted
   bool _userEnteredData = false;
 
   AutovalidateMode _autovalidateMode =
       AutovalidateMode.disabled; // Add this line
+
+  @override
+  void initState() {
+    super.initState();
+    _resistivity.addListener(() => handleControllerInput(_resistivity));
+    _rodelength.addListener(() => handleControllerInput(_rodelength));
+    _areaoflength.addListener(() => handleControllerInput(_areaoflength));
+  }
+
+  //to restrict the decimal till three
+  void handleControllerInput(TextEditingController controller) {
+    final text = controller.text;
+    final doubleParsed = double.tryParse(text);
+    setState(() {
+      _userEnteredData = true;
+    });
+    if (doubleParsed != null) {
+      // Limit the input to 3 decimal places
+      final decimalIndex = text.indexOf('.');
+      if (decimalIndex != -1 && text.length - decimalIndex > 4) {
+        // More than 3 decimal places, restrict the input
+        controller.value = controller.value.copyWith(
+          text: text.substring(0, decimalIndex + 4),
+          selection: TextSelection.collapsed(offset: decimalIndex + 4),
+        );
+        return;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _resistivity.dispose();
+    _areaoflength.dispose();
+    _rodelength.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +77,10 @@ class _CalculatorState extends State<Calculator> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: Form(
             autovalidateMode: _autovalidateMode,
-            key: _formkey,
+            key: _formKey,
             child: Stack(
               children: [
-                Container(
+                SizedBox(
                   height: double.infinity,
                   child: SingleChildScrollView(
                     physics: AlwaysScrollableScrollPhysics(),
@@ -60,308 +91,401 @@ class _CalculatorState extends State<Calculator> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          "Earth Electrode Calculator",
-                          style: TextStyle(fontSize: 28, height: 4),
+                        SizedBox(
+                          height: 45,
+                        ),
+                        Container(
+                          alignment: Alignment.center,
+                          width: double
+                              .infinity, // Take up the full available width
+                          child: FittedBox(
+                            fit: BoxFit
+                                .scaleDown, // Scale down the text if it's too large
+                            child: Text(
+                              "Earth Electrode Calculator",
+                              style: TextStyle(
+                                  fontSize: 22, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.clip,
+                              maxLines: 1,
+                            ),
+                          ),
                         ),
                         SizedBox(
                           height: 20,
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Restivity Of Soil",
-                            ),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Container(
-                              child: TextFormField(
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "resistivity cannot be empty";
-                                  } else if (value == "0") {
-                                    return "resistivity cannot be zero";
-                                  } else if (!isValidDecimal(value)) {
-                                    return 'enter decimal numbers with minimum 3 decimal places';
-                                  } else
-                                    return null;
-                                },
-                                controller: _resistivity,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _userEnteredData = true;
-                                  });
-                                },
-                                keyboardType: TextInputType.number,
-                                style: TextStyle(color: Colors.black),
-                                decoration: InputDecoration(
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.black, width: 2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.black, width: 2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    helperText: '',
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.black, width: 2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    focusColor: Colors.black,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.only(top: 15),
-                                    prefixIcon: Icon(
-                                      Icons.line_axis,
-                                      color: Colors.black,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      onPressed: () {
-                                        _resistivity.clear();
-                                      },
-                                      icon: Icon(
-                                        Icons.clear,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    hintText: 'Eg:1.124',
-                                    hintStyle: TextStyle(color: Colors.grey)),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Text(
-                              "Length of Rod",
-                            ),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Container(
-                              child: TextFormField(
-                                controller: _rodelength,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "length cannot be empty";
-                                  } else if (value == "0") {
-                                    return "Length cannot be zero";
-                                  } else
-                                    return null;
-                                },
-                                keyboardType: TextInputType.number,
-                                style: TextStyle(color: Colors.black),
-                                decoration: InputDecoration(
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.black, width: 2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.black, width: 2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    helperText: '',
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.black, width: 2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.only(top: 5),
-                                    prefixIcon: Icon(
-                                      Icons.lock,
-                                      color: Colors.black,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      onPressed: () {
-                                        _rodelength.clear();
-                                      },
-                                      icon: Icon(
-                                        Icons.clear,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    hintText: 'Eg:2.5',
-                                    hintStyle: TextStyle(color: Colors.grey)),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Text(
-                              "Diameter of Rod",
-                            ),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Container(
-                              child: TextFormField(
-                                controller: _areaoflength,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "diameter cannot be empty";
-                                  } else if (value == "0") {
-                                    return "Diameter cannot be zero";
-                                  } else
-                                    return null;
-                                },
-                                keyboardType: TextInputType.number,
-                                style: TextStyle(color: Colors.black),
-                                decoration: InputDecoration(
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.black, width: 2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.black, width: 2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    helperText: '',
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.black, width: 2),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.only(top: 5),
-                                    prefixIcon: Icon(
-                                      Icons.circle,
-                                      color: Colors.black,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      onPressed: () {
-                                        _areaoflength.clear();
-                                      },
-                                      icon: Icon(
-                                        Icons.clear,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    hintText: 'Eg:0.023',
-                                    hintStyle: TextStyle(color: Colors.grey)),
-                              ),
-                            ),
-                            Row(
+                        Card(
+                          elevation: 4, // Adjust the shadow elevation as needed
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                15.0), // Adjust the border radius
+                            side: BorderSide(
+                                color: Colors.black,
+                                width: 2.0), // Border color and width
+                          ),
+                          child: Container(
+                            padding:
+                                EdgeInsets.all(20.0), // Padding inside the card
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 110,
-                                    padding: EdgeInsets.symmetric(vertical: 35),
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          _autovalidateMode = AutovalidateMode
-                                              .disabled; // Disable auto-validation
-                                          _resistivity.clear();
-                                          _rodelength.clear();
-                                          _areaoflength.clear();
-                                          result = "";
-                                        });
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        foregroundColor: Colors.red,
-                                        backgroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(15.0),
-                                          side: BorderSide(color: Colors.red),
-                                        ),
-                                      ),
-                                      child: Text('Reset'),
-                                    ),
-                                  ),
-                                ),
-
                                 SizedBox(
-                                    width:
-                                        16), // Add some space between the buttons
-                                Expanded(
-                                  child: Container(
-                                    height: 110,
-                                    padding: EdgeInsets.symmetric(vertical: 35),
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          _autovalidateMode =
-                                              AutovalidateMode.always;
-                                        });
-                                        if (_formkey.currentState!.validate()) {
-                                          if (_resistivity.text == '0' &&
-                                              _rodelength.text == '0' &&
-                                              _areaoflength.text == '0') {
-                                            setState(() {
-                                              _errorMessage = 'Enter the input';
-                                              result = '';
-                                            });
-                                          } else if (!isValidDecimal(
-                                              _resistivity.text)) {
-                                            setState(() {
-                                              _errorMessage =
-                                                  'enter decimal numbers with minimum 3 decimal places';
-                                              result = '';
-                                              _autovalidateMode =
-                                                  AutovalidateMode.always;
-                                            });
-                                          } else {
-                                            setState(() {
-                                              _errorMessage = '';
-                                            });
-                                            calculateResistance();
-                                          }
+                                  height: 15,
+                                ),
+                                Text(
+                                  "Resistivity Of Soil",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 5,
+                                ),
+                                Container(
+                                  child: TextFormField(
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return "resistivity cannot be empty";
+                                      } else if (value == "0") {
+                                        return "resistivity cannot be zero";
+                                      } else
+                                        return null;
+                                    },
+                                    controller: _resistivity,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        // _userEnteredData = true;
+                                        if (result.isNotEmpty) {
+                                          result = "";
                                         }
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        foregroundColor: Colors.green,
-                                        backgroundColor:
-                                            Colors.white, // Text color
-                                        shape: RoundedRectangleBorder(
+                                      });
+                                    },
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    style: TextStyle(color: Colors.black),
+                                    decoration: InputDecoration(
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Colors.black, width: 2),
                                           borderRadius:
-                                              BorderRadius.circular(15.0),
-                                          side: BorderSide(
-                                              color:
-                                                  Colors.green), // Border color
+                                              BorderRadius.circular(15),
                                         ),
-                                      ),
-                                      child: Text('Submit'),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  child: Text(
-                                    "Resistance of Electrode",
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 22,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  child: result == ""
-                                      ? Container() // Empty container if result is empty
-                                      : Text(
-                                          "$result Ω",
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 18,
+                                        enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Colors.black, width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        helperText: '',
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Colors.black, width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        focusColor: Colors.black,
+                                        isDense: true,
+                                        contentPadding:
+                                            EdgeInsets.only(top: 15),
+                                        prefixIcon: Icon(
+                                          Icons.line_axis,
+                                          color: Colors.black,
+                                        ),
+                                        suffixIcon: TextButton(
+                                          onPressed: () {},
+                                          child: Container(
+                                            child: Text("Ωm",
+                                                style: TextStyle(
+                                                    color: Colors.black)),
                                           ),
                                         ),
+                                        hintText: 'e.g:1.121 Ωm',
+                                        hintStyle:
+                                            TextStyle(color: Colors.grey)),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Text(
+                                  "Length of Rod",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 5,
+                                ),
+                                Container(
+                                  child: TextFormField(
+                                      controller: _rodelength,
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return "length cannot be empty";
+                                        } else if (value == "0") {
+                                          return "Length cannot be zero";
+                                        } else
+                                          return null;
+                                      },
+                                      onChanged: (value) {
+                                        setState(() {
+                                          // _userEnteredData = true;
+                                          if (result.isNotEmpty) {
+                                            result = "";
+                                          }
+                                        });
+                                      },
+                                      keyboardType: TextInputType.number,
+                                      style: TextStyle(color: Colors.black),
+                                      decoration: InputDecoration(
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Colors.black, width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Colors.black, width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        helperText: '',
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Colors.black, width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        isDense: true,
+                                        contentPadding: EdgeInsets.only(top: 5),
+                                        prefixIcon: Icon(
+                                          Icons.lock,
+                                          color: Colors.black,
+                                        ),
+                                        suffixIcon: TextButton(
+                                          onPressed: () {},
+                                          child: Container(
+                                            child: Text("m",
+                                                style: TextStyle(
+                                                    color: Colors.black)),
+                                          ),
+                                        ),
+                                        hintText: 'e.g:2.5 m',
+                                        hintStyle:
+                                            TextStyle(color: Colors.grey),
+                                      )),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Text(
+                                  "Diameter of Rod",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 5,
+                                ),
+                                Container(
+                                  child: TextFormField(
+                                    controller: _areaoflength,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return "diameter cannot be empty";
+                                      } else if (value == "0") {
+                                        return "Diameter cannot be zero";
+                                      } else
+                                        return null;
+                                    },
+                                    onChanged: (value) {
+                                      setState(() {
+                                        // _userEnteredData = true;
+                                        if (result.isNotEmpty) {
+                                          result = "";
+                                        }
+                                      });
+                                    },
+                                    keyboardType: TextInputType.number,
+                                    style: TextStyle(color: Colors.black),
+                                    decoration: InputDecoration(
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Colors.black, width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Colors.black, width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        helperText: '',
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: Colors.black, width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                        ),
+                                        isDense: true,
+                                        contentPadding: EdgeInsets.only(top: 5),
+                                        prefixIcon: Icon(
+                                          Icons.circle,
+                                          color: Colors.black,
+                                        ),
+                                        suffixIcon: TextButton(
+                                          onPressed: () {},
+                                          child: Container(
+                                            child: Text("m",
+                                                style: TextStyle(
+                                                    color: Colors.black)),
+                                          ),
+                                        ),
+                                        hintText: 'e.g:0.023 m',
+                                        hintStyle:
+                                            TextStyle(color: Colors.grey)),
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        height: 110,
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 35),
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _autovalidateMode =
+                                                  AutovalidateMode.disabled;
+                                              _formKey.currentState
+                                                  ?.reset(); // Disable auto-validation
+                                              _resistivity.clear();
+                                              _rodelength.clear();
+                                              _areaoflength.clear();
+                                              result = "";
+                                            });
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.red,
+                                            backgroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(15.0),
+                                              side:
+                                                  BorderSide(color: Colors.red),
+                                            ),
+                                          ),
+                                          child: Text('Reset'),
+                                        ),
+                                      ),
+                                    ),
+
+                                    SizedBox(
+                                        width:
+                                            16), // Add some space between the buttons
+                                    Expanded(
+                                      child: Container(
+                                        height: 110,
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 35),
+                                        child: ElevatedButton(
+                                          onPressed: (_resistivity
+                                                      .text.isNotEmpty &&
+                                                  _rodelength.text.isNotEmpty &&
+                                                  _areaoflength.text.isNotEmpty)
+                                              ? () {
+                                                  setState(() {
+                                                    _autovalidateMode =
+                                                        AutovalidateMode.always;
+                                                  });
+
+                                                  // Convert input to a valid format (e.g., add "0." to ".023")
+                                                  // Format all input fields
+                                                  _resistivity.text =
+                                                      formatInput(
+                                                          _resistivity.text);
+                                                  _rodelength.text =
+                                                      formatInput(
+                                                          _rodelength.text);
+                                                  _areaoflength.text =
+                                                      formatInput(
+                                                          _areaoflength.text);
+
+                                                  if (_formKey.currentState!
+                                                      .validate()) {
+                                                    calculateResistance();
+                                                  }
+                                                }
+                                              : null,
+
+                                          // Disable the button if any of the required fields is empty
+                                          style: ElevatedButton.styleFrom(
+                                            foregroundColor: Colors.green,
+                                            backgroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(15.0),
+                                              side: BorderSide(
+                                                  color: Colors.green),
+                                            ),
+                                          ),
+                                          child: Text('Calculate'),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      child: Text(
+                                        "Resistance of Electrode",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18),
+                                      ),
+                                    ),
+                                    TextFormField(
+                                      readOnly: true,
+                                      decoration: InputDecoration(
+                                        // Conditional border color based on result
+                                        border: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: result.isEmpty
+                                                ? Colors.grey
+                                                : Colors.blue,
+                                          ),
+                                        ),
+                                        // Additional styling based on result
+                                        fillColor: result.isEmpty
+                                            ? Colors.grey[200]
+                                            : Colors.white,
+                                        filled: true,
+                                        contentPadding: EdgeInsets.all(10),
+                                      ),
+                                      controller: TextEditingController(
+                                        text: (_resistivity.text.isNotEmpty &&
+                                                _rodelength.text.isNotEmpty &&
+                                                _areaoflength.text.isNotEmpty)
+                                            ? (result.isEmpty
+                                                ? ''
+                                                : '$result Ω')
+                                            : '',
+                                      ),
+                                    )
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         )
                       ],
                     ),
@@ -376,18 +500,27 @@ class _CalculatorState extends State<Calculator> {
   }
 
   void calculateResistance() {
-    double resistivity = double.parse(_resistivity.text);
-    double length = double.parse(_rodelength.text);
-    double diameter = double.parse(_areaoflength.text);
+    setState(() {
+      result =
+          ''; // Set result to empty string before performing the calculation
+    });
+    double resistivity = double.tryParse(_resistivity.text) ?? 0;
+    double length = double.tryParse(_rodelength.text) ?? 0;
+    double diameter = double.tryParse(_areaoflength.text) ?? 0;
+
+    if (resistivity == 0 || length == 0 || diameter == 0) {
+      setState(() {
+        result =
+            ''; // Set result to empty string if any of the input fields is empty
+      });
+      return;
+    }
 
     double result1 = (resistivity / (2 * pi * length));
-
-    print(result1);
 
     double result2 = log((8 * length) / diameter);
 
     double result3 = result2 - 1;
-    print(result3);
 
     double resistance = result1 * result3;
     // double result1 =
@@ -398,37 +531,36 @@ class _CalculatorState extends State<Calculator> {
     });
   }
 
-  bool isValidDecimal(String value) {
-    if (!_userEnteredData || value.isEmpty) {
-      // No data entered, or user hasn't entered data, don't show an error
-      return true;
+  String formatInput(String input) {
+    if (input.startsWith('.') && !input.startsWith('0.')) {
+      return '0$input';
     }
-    if (!value.contains('.')) {
-      // No decimal point, consider it as zero decimal places
-      return true;
-    }
-    try {
-      double parsedValue = double.parse(value);
-
-      int decimalIndex = value.indexOf(
-          '.'); // Find the index of the decimal point in the original string
-
-// If there is no decimal point, or if the value ends with '0', consider it as zero or less than 3 decimal places
-      if (decimalIndex == -1) {
-        return true;
-      }
-
-// Calculate the number of decimal places
-      int decimalPlaces = value.length - decimalIndex - 1;
-
-// Only show an error if there are less than 3 decimal places
-      if (decimalPlaces < 3) {
-        return false;
-      }
-
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return input;
   }
+
+  // bool isValidDecimal(String value) {
+  //   if (!_userEnteredData || value.isEmpty) {
+  //     // No data entered, or user hasn't entered data, don't show an error
+  //     return true;
+  //   }
+  //   // if (!value.contains('.')) {
+  //   //   // No decimal point, consider it as zero decimal places
+  //   //   return true;
+  //   // }
+  //   try {
+  //     // double parsedValue = double.parse(value);
+  //     int decimalIndex = value.indexOf(
+  //         '.'); // Find the index of the decimal point in the original string
+  //     if (decimalIndex == -1) {
+  //       return false;
+  //     }
+  //     int decimalPlaces = value.length - decimalIndex - 1;
+  //     if (decimalPlaces < 3 || decimalPlaces == 0) {
+  //       return false;
+  //     }
+  //     return true;
+  //   } catch (e) {
+  //     return false;
+  //   }
+  // }
 }
