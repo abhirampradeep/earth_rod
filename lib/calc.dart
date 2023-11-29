@@ -58,6 +58,11 @@ class _CalculatorState extends State<Calculator> {
         return;
       }
     }
+<<<<<<< HEAD
+=======
+
+    
+>>>>>>> 80173d60b4dff7e58879fadf170d30577ddde898
   }
 
   @override
@@ -152,6 +157,7 @@ class _CalculatorState extends State<Calculator> {
                                         return null;
                                     },
                                     controller: _resistivity,
+<<<<<<< HEAD
                                     onChanged: (value) {
                                       setState(() {
                                         // _userEnteredData = true;
@@ -163,6 +169,17 @@ class _CalculatorState extends State<Calculator> {
                                     keyboardType:
                                         TextInputType.numberWithOptions(
                                             decimal: true),
+=======
+                                    // onChanged: (value) {
+                                    //   setState(() {
+                                    //     _userEnteredData = true;
+                                    //   });
+                                    // },
+                                    keyboardType:
+                                        TextInputType.numberWithOptions(
+                                            decimal: true),
+
+>>>>>>> 80173d60b4dff7e58879fadf170d30577ddde898
                                     style: TextStyle(color: Colors.black),
                                     decoration: InputDecoration(
                                         focusedBorder: OutlineInputBorder(
@@ -229,6 +246,7 @@ class _CalculatorState extends State<Calculator> {
                                         } else
                                           return null;
                                       },
+<<<<<<< HEAD
                                       onChanged: (value) {
                                         setState(() {
                                           // _userEnteredData = true;
@@ -237,6 +255,8 @@ class _CalculatorState extends State<Calculator> {
                                           }
                                         });
                                       },
+=======
+>>>>>>> 80173d60b4dff7e58879fadf170d30577ddde898
                                       keyboardType: TextInputType.number,
                                       style: TextStyle(color: Colors.black),
                                       decoration: InputDecoration(
@@ -302,6 +322,7 @@ class _CalculatorState extends State<Calculator> {
                                       } else
                                         return null;
                                     },
+<<<<<<< HEAD
                                     onChanged: (value) {
                                       setState(() {
                                         // _userEnteredData = true;
@@ -310,6 +331,8 @@ class _CalculatorState extends State<Calculator> {
                                         }
                                       });
                                     },
+=======
+>>>>>>> 80173d60b4dff7e58879fadf170d30577ddde898
                                     keyboardType: TextInputType.number,
                                     style: TextStyle(color: Colors.black),
                                     decoration: InputDecoration(

@@ -1,6 +1,6 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'package:Earth_Electrode_Calculator/calc.dart';
+import 'package:earth_electrode_calculator/calc.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
